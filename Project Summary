@@ -1,0 +1,27 @@
+To summarise what I have done, I have performed initial data exploration analysis on the data
+set and the major findings included: 1. few categorical columns had missing values, which resulted
+in discarding this column, since they are regional features and might not be significant in
+predicting our target variable. 2. Some variables were positively and negatively highly correlated
+to the target variable. The variable TargetDays was negatively correlated to a high degree and was
+thus not used in the model for fitting and prediction. 3. Categotrical Variables with two unique
+categories were encoded using label encoding and those with more than two were encoded using
+one hot encoding.
+After performing EDA, I went further to split the data into a train and test set. The split was
+done using a 70:30 ratio. Next was to implement the logistic regression model to train and predict
+the target variable.
+The logistic regression classifier model gave a 59% classification accuracy on the test set and
+showed also in the confusion matrix a poor prediction on the potential of buyers for the software
+products. Hence there was a need for an improved model.
+The random forest model was used to fit the training data and predict the target variable. The
+random forest classifier gave a 83% classification accuracy on the test set and an AUC mean score
+of 79%. The confusion matrix and ROC curve showed better results.
+
+Recommendation for improvement
+
+1. The random forest model can be improved upon by tunning the hyper parameters
+2. if we had included the strongly negative correlated variable, this would have increased the
+prediction accuracy of both models.
+3. A further improvement is the use of feature selection in the models. The relationship between
+the variables in our data can be captured by the use of some statistical properties,
+which in turn provides us with more features/ new columns that can be added to the data
+and used in the various model. This can lead to an improved result on the models.
