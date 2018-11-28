@@ -1,0 +1,16 @@
+OrganisationNo - Customer Org No
+LineDiscount - Customer Discount Agreement
+CustomerUnit -  Customer Size Segmentation
+AccountManager - Account Manager
+Municipality - Municipality
+County - County
+Country - Country
+NoOfEmployees - No of Employees
+Potential - Customer IT Spend Potential
+AccessoryRatio - Share of Accessories Purchased
+NSB - Net Sales (SEK)
+CPLow - Customer Profit (%)
+Days - Days since last purchase
+TargetDays - Days since software purchase
+NrOfOrder - No of Orders
+Software - Customer bought software (Yes/No)
