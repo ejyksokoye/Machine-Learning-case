@@ -25,3 +25,263 @@ import seaborn as sns
 #read data
 data=pd.read_csv('casedata.csv', sep=';',decimal=",", encoding='latin1')
 data.head(5)
+
+#Column types
+# Number of each type of column in the data set
+data.dtypes.value_counts()
+
+# Function to calculate missing values by column# Funct 
+def missing_values_table(df):
+        # Total missing values
+        mis_val = df.isnull().sum()
+        
+        # Percentage of missing values
+        mis_val_percent = 100 * df.isnull().sum() / len(df)
+        
+        # Make a table with the results
+        mis_val_table = pd.concat([mis_val, mis_val_percent], axis=1)
+        
+        # Rename the columns
+        mis_val_table_ren_columns = mis_val_table.rename(
+        columns = {0 : 'Missing Values', 1 : '% of Total Values'})
+        
+        # Sort the table by percentage of missing descending
+        mis_val_table_ren_columns = mis_val_table_ren_columns[
+            mis_val_table_ren_columns.iloc[:,1] != 0].sort_values(
+        '% of Total Values', ascending=False).round(1)
+        
+        # Print some summary information
+        print ("Your selected dataframe has " + str(df.shape[1]) + " columns.\n"      
+            "There are " + str(mis_val_table_ren_columns.shape[0]) +
+              " columns that have missing values.")
+        
+        # Return the dataframe with missing information
+        return mis_val_table_ren_columns
+  
+# Missing values statistics
+missing_values = missing_values_table(data)
+missing_values
+
+# Number of unique classes in each object column
+data.select_dtypes('object').apply(pd.Series.nunique, axis = 0)
+
+#Examine the Distribution of the Target(Software) Column
+data['Software'].value_counts()
+
+# Encoding Categorical Variables
+# Label Encoding and One-Hot Encoding
+# Create a label encoder object for our dataset
+le = LabelEncoder()
+le_count = 0
+
+# Iterate through the columns
+for col in data:
+    if data[col].dtype == 'object':
+        # If 2 or fewer unique categories
+        if len(list(data[col].unique())) <= 2:
+            # Train on the data
+            le.fit(data[col])
+            # Transform the data
+            data[col] = le.transform(data[col])
+            
+            
+            # Keep track of how many columns were label encoded
+            le_count += 1
+            
+print('%d columns were label encoded.' % le_count)
+
+# one-hot encoding of categorical variables
+data= pd.get_dummies(data, prefix=['Country1','CustomerUnit1'], 
+                     columns=['Country', 'CustomerUnit'])
+
+print('Training Features shape: ', data.shape)
+
+# Going to back to Exploratory data analysis
+data['Software'].astype(int).plot.hist();
+plt.show()
+
+# Correlation
+# Find correlations with the target variable and sort
+correlations = data.corr()['Software'].sort_values()
+
+# Display correlations
+print('Most Positive Correlations:', correlations.tail(10))
+print('Most Negative Correlations:', correlations.head(10))
+
+# Positive correlated variables to the target variable
+plt.figure(figsize = (15, 3))
+
+# iterate through the sources
+for i, source in enumerate(['NrOfOrder', 'LineDiscount', 
+                            'Country1_Dustin Sweden']):
+    
+    # create a new subplot for each source
+    plt.subplot(1, 3, i + 1)
+    # KDE plot of No purchase of software
+    sns.kdeplot(data.loc[data['Software'] == 0, source], 
+                label = 'software == 0')
+    # KDE plot of Yes purchase of software
+    sns.kdeplot(data.loc[data['Software'] == 1, source], 
+                label = 'software == 1')
+    
+    # Label the plots
+    plt.title('Distribution of %s by Target Value' % source)
+    plt.xlabel('%s' % source); plt.ylabel('Density');
+    
+plt.tight_layout(h_pad = 2.5)
+plt.show()
+
+# Extract the variables and show correlations
+ext_data = data[['Software', 'TargetDays' ,'NrOfOrder','LineDiscount', 
+                 'Country1_Dustin Sweden']]
+ext_data_corrs = ext_data.corr()
+ext_data_corrs
+
+#Plot variable of highest negative correlation to target variable
+plt.figure(figsize = (8, 3))
+fig,axes= plt.subplots(1,2)
+
+# KDE plot of No purchase of software
+sns.kdeplot(data.loc[data['Software'] == 0, 'TargetDays']/365, 
+            label = 'Software == 0', ax=axes[0])
+# KDE plot of Yes purchase of software
+sns.kdeplot(data.loc[data['Software'] == 1, 'TargetDays']/365, 
+            label = 'Software == 1', ax=axes[0])
+# Labeling of plot
+plt.xlabel('Years since software purchase'); plt.ylabel('Density');
+plt.title('Distribution of Years since software purchase');
+
+
+#Histogram of Years of Purchase(TargetDays)
+(data['TargetDays']/365).plot.hist(ax=axes[1], 
+    title = 'Years since software purchase Histogram', figsize = (10, 5));
+plt.xlabel('Years since software purchase')
+
+plt.tight_layout(h_pad = 2.5)
+plt.show()
+
+#Drop unnessecasry variables in the data
+data = data.drop(['TargetAccessory','AccountManager','Municipality',
+                  'County', 'TargetDays'], axis = 1)
+
+# Splitting our data into a training and testing set.
+from sklearn.model_selection import train_test_split
+
+# Remove the target data and keep as a separate data to be split also.
+
+data_label= data['Software']
+data = data.drop('Software', axis = 1)
+
+#Splitting data into train and test
+X_train, X_test, y_train, y_test = train_test_split(data, data_label, 
+                                        test_size=0.3, random_state=10)    
+
+# Shape of our train and test data
+X_train.shape, X_test.shape, y_train.shape, y_test.shape
+
+#Logistic Regression Implementation
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+
+# Make the model with the specified regularization parameter
+log_reg = LogisticRegression(C = 0.0001)
+
+# Train on the training data
+log_reg.fit(X_train, y_train)
+
+from sklearn import metrics
+
+# Predicting the test set results and calculating the accuracy
+log_reg_pred = log_reg.predict_proba(X_test)[:, 1]
+
+print('Accuracy of logistic regression classifier on test set:'
+      '{:.2f}'.format(log_reg.score(X_test, y_test)))
+
+# Predicted values 
+y_pred = log_reg.predict(X_test)
+
+#Confusion Matrix
+from sklearn.metrics import confusion_matrix
+confusion_matrix = confusion_matrix(y_test, y_pred)
+print(confusion_matrix)
+
+# Computing precision, recall, F-measure
+from sklearn.metrics import classification_report
+print(classification_report(y_test, y_pred))
+
+# Interpretation
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve
+log_roc_auc = roc_auc_score(y_test, y_pred)
+fpr, tpr, thresholds = roc_curve(y_test, log_reg_pred)
+plt.figure()
+plt.plot(fpr, tpr, label='Logistic Regression (area = %0.2f)' 
+         % log_roc_auc)
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic')
+plt.legend(loc="lower right")
+plt.savefig('Log_ROC')
+plt.show()
+
+# Improved Model: Random Forest
+from sklearn.ensemble import RandomForestClassifier
+#from sklearn.grid_search import GridSearchCV
+
+# Make the random forest classifier
+random_forest = RandomForestClassifier(n_estimators=100, random_state=50, verbose=2, max_depth=3, n_jobs= -1)
+
+# Train on the training data
+random_forest.fit(X_train, y_train)
+# Make predictions on the test data
+predictions = random_forest.predict_proba(X_test)[:, 1]
+
+# Predicted values 
+y_predictions = random_forest.predict(X_test)
+
+print('Accuracy of random forest classifier on test set:' 
+      '{:.2f}'.format(random_forest.score(X_test, y_test)))
+
+# Evaluating Performance of the Random Forest Model
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix
+
+rfc_cv_score = cross_val_score(random_forest, data, data_label, cv=3, scoring='roc_auc')
+
+print("=== Confusion Matrix ===")
+print(confusion_matrix(y_test, y_predictions))
+print('\n')
+
+print("=== Classification Report ===")
+print(classification_report(y_test, y_predictions))
+print('\n')
+
+print("=== All AUC Scores ===")
+
+print(rfc_cv_score)
+print('\n')
+
+print("=== Mean AUC Score ===")
+print("Mean AUC Score - Random Forest: ", rfc_cv_score.mean())
+
+# ROC Curve
+log_roc_auc = roc_auc_score(y_test, y_predictions)
+fpr, tpr, thresholds = roc_curve(y_test, predictions)
+plt.figure()
+plt.plot(fpr, tpr, label='Random Forest Classifier (area = %0.2f)' 
+         % log_roc_auc)
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic')
+plt.legend(loc="lower right")
+plt.savefig('Log_ROC')
+plt.show()
+
+
+            
