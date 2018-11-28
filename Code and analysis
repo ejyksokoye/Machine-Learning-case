@@ -1,1 +1,27 @@
+# numpy and pandas for data manipulation
+import numpy as np
+import pandas as pd 
 
+# File system manangement
+import os
+
+# sklearn preprocessing for dealing with categorical variables
+from sklearn.preprocessing import LabelEncoder
+
+# Splitting our data into a training and a test set. 
+from sklearn.model_selection import train_test_split
+
+# Suppress warnings 
+import warnings
+warnings.filterwarnings('ignore')
+
+
+# matplotlib and seaborn for plotting
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+#Load in Data
+
+#read data
+data=pd.read_csv('casedata.csv', sep=';',decimal=",", encoding='latin1')
+data.head(5)
